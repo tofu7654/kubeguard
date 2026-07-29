@@ -1,0 +1,55 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "auth"
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "keycloak",
+            "ready": true
+          },
+          {
+            "name": "postgres",
+            "ready": false
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "frontend"
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "react",
+            "ready": true
+          },
+          {
+            "name": "nginx",
+            "ready": false
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "ocr"
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "ocr",
+            "ready": true
+          },
+          {
+            "name": "metrics",
+            "ready": true
+          }
+        ]
+      }
+    }
+  ]
+}

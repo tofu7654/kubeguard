@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "backend"
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "api",
+            "ready": true
+          },
+          {
+            "name": "envoy",
+            "ready": false
+          },
+          {
+            "name": "metrics",
+            "ready": true
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "api-7d8f9"
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "api",
+            "ready": false
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "client-4f8c1"
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "client",
+            "ready": true
+          }
+        ]
+      }
+    }
+  ]
+}
