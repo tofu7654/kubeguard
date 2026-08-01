@@ -1,0 +1,23 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "worker"
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "worker",
+            "ready": true,
+            "restartCount": 3
+          },
+          {
+            "name": "metrics",
+            "ready": true,
+            "restartCount": 3
+          }
+        ]
+      }
+    }
+  ]
+}

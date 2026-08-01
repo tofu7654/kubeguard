@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "api"
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "api",
+            "ready": false,
+            "restartCount": 0
+          }
+        ]
+      }
+    }
+  ]
+}

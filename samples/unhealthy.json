@@ -1,0 +1,23 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "keycloak"
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "keycloak",
+            "ready": false,
+            "restartCount": 4
+          },
+          {
+            "name": "sidecar",
+            "ready": true,
+            "restartCount": 3
+          }
+        ]
+      }
+    }
+  ]
+}

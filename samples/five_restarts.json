@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "database"
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "postgres",
+            "ready": true,
+            "restartCount": 5
+          }
+        ]
+      }
+    }
+  ]
+}
