@@ -22,8 +22,16 @@ def main() -> None:
 
 def load_pods(path: str) -> dict[str, Any]:
     # load in the json file as a python dictionary
-    with open(path, "r", encoding="utf-8") as file:
-        pods_data = json.load(file)
+    try:
+        with open(path, "r", encoding="utf-8") as file:
+            pods_data = json.load(file)
+    except FileNotFoundError:
+        print(f"ERROR: File not found: {path}")
+        sys.exit(1)
+    except json.JSONDecodeError:
+        print(f"ERROR: Failed to parse JSON")
+        sys.exit(1)
+
     return pods_data
 
 # this function finds unhealthy pods based on the container ready status and restarts
