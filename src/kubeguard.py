@@ -1,6 +1,8 @@
 import json
-from typing import Any # import type definitions
+from typing import Any
 import sys
+
+RESTART_THRESHOLD = 5
 
 def main() -> None:
     # get path of json file from command line arg
@@ -14,7 +16,7 @@ def main() -> None:
     # parse the json into dictionary
     pods_data = load_pods(pod_json_path)
 
-    # obtain list of unhealthy pods
+    # obtain dictionary of pods and their statuses
     unhealthy_pods = find_unhealthy_pods(pods_data)
 
     # print the results
@@ -26,58 +28,70 @@ def load_pods(path: str) -> dict[str, Any]:
         with open(path, "r", encoding="utf-8") as file:
             pods_data = json.load(file)
     except FileNotFoundError:
-        print(f"ERROR: File not found: {path}")
+        print(f"ERROR: File not found: {path}", file=sys.stderr)
         sys.exit(1)
     except json.JSONDecodeError:
-        print(f"ERROR: Failed to parse JSON")
+        print(f"ERROR: Failed to parse JSON", file=sys.stderr)
         sys.exit(1)
 
     return pods_data
 
-# this function finds unhealthy pods based on the container ready status and restarts
-def find_unhealthy_pods(pods_data: dict[str, Any]) -> list[str]:
-    # initialize list to hold pod names
-    unhealthy_pods = []
+def find_unhealthy_pods(pods_data: dict[str, Any]) -> dict[str, list[str]]:
+
+    # hold the statuses of the unhealthy pods
+    unhealthy_pods = {}
+
     # loop through the list of pods
     for pod in pods_data["items"]: 
         pod_name = pod["metadata"]["name"] # get the name of the pod
 
-        # check if this pod is unhealthy
-        unhealthy = is_pod_unhealthy(pod)
-        
-        # Report pod if the flag was marked true
-        if unhealthy:
-            unhealthy_pods.append(pod_name)
+        # analyze the pod and store the condition messages in a list
+        issues = find_pod_issues(pod)
 
-    # return the list of unhealthy pods        
+        # put this issue in the overall unhealthy_pods
+        if issues:
+            unhealthy_pods[pod_name] = issues
+
+    # return the list of unhealthy pods and the reasons        
     return unhealthy_pods
 
-def print_results(unhealthy_pods: list[str]) -> None:
-    # if unhealthy_pods array is empty
+def print_results(unhealthy_pods: dict[str, list[str]]) -> None:
     if not unhealthy_pods:
         print("All pods are healthy.")
-    # otherwise print the unhealthy pods
-    else:
-        print("Unhealthy pods:")
-        for pod_name in unhealthy_pods:
-            print(pod_name)
+        return
 
-# this function determines if a pod is unhealthy 
-def is_pod_unhealthy(pod: dict[str, Any]) -> bool:
-    unhealthy = False
+    print("Unhealthy pods:")
+    # loop through the dictionary
+    for pod, issues in unhealthy_pods.items():
+        # print pod name
+        print(pod)
+
+        # for each status message for a pod, print it
+        for issue in issues:
+            print("- " + issue)
+
+# this function determines the issues a pod may have and returns a list, empty if healthy
+def find_pod_issues(pod: dict[str, Any]) -> list[str]:
+    issues = []
+
     total_restart_count = 0
     for container_status in pod["status"]["containerStatuses"]: # loop through the containerstatuses
-        # set flag as true if any container is not ready
+        container_name = container_status["name"]
+
+        # check if the container is ready
         if not container_status["ready"]:
-            unhealthy = True
+            # record the readiness issue
+            issues.append(f"Container {container_name} is not ready")
 
         # track the total restarts across all containers in this pod
         total_restart_count += container_status["restartCount"]
-        # if the containers have restarted more than 5 times across all containers, mark this pod unhealthy
-    if total_restart_count > 5:
-        unhealthy = True
 
-    return unhealthy
+    # check if the containers have restarted more than 5 times across all containers
+    if total_restart_count > RESTART_THRESHOLD:
+        # record the excessive restart count
+        issues.append(f"Total restart count: {total_restart_count}")
+
+    return issues
      
 if __name__ == "__main__":
     main()
