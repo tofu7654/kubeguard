@@ -33,23 +33,12 @@ def find_unhealthy_pods(pods_data: dict[str, Any]) -> list[str]:
     # loop through the list of pods
     for pod in pods_data["items"]: 
         pod_name = pod["metadata"]["name"] # get the name of the pod
-        pod_status = pod["status"] # get the statuses of the pod
-        is_pod_unhealthy = False
-        total_restart_count = 0
-        for container_status in pod_status["containerStatuses"]: # loop through the containerstatuses
-            # set flag as true if any container is not ready
-            if not container_status["ready"]:
-                is_pod_unhealthy = True
-                break
 
-            # track the total restarts across all pods
-            total_restart_count += container_status["restartCount"]
-            # if the containers have restarted more than 5 times across all containers, mark this pod unhealthy
-        if total_restart_count > 5:
-            is_pod_unhealthy = True
+        # check if this pod is unhealthy
+        unhealthy = is_pod_unhealthy(pod)
         
         # Report pod if the flag was marked true
-        if is_pod_unhealthy:
+        if unhealthy:
             unhealthy_pods.append(pod_name)
 
     # return the list of unhealthy pods        
@@ -65,10 +54,22 @@ def print_results(unhealthy_pods: list[str]) -> None:
         for pod_name in unhealthy_pods:
             print(pod_name)
 
-# this function return the container statuses of a pod, given a pod.
-def get_container_statuses(pod_data: list[str]) -> dict[str, Any]:
-    container_status = pod_data["status"]["containerStatuses"]
-    return container_status
+# this function determines if a pod is unhealthy 
+def is_pod_unhealthy(pod: dict[str, Any]) -> bool:
+    unhealthy = False
+    total_restart_count = 0
+    for container_status in pod["status"]["containerStatuses"]: # loop through the containerstatuses
+        # set flag as true if any container is not ready
+        if not container_status["ready"]:
+            unhealthy = True
+
+        # track the total restarts across all containers in this pod
+        total_restart_count += container_status["restartCount"]
+        # if the containers have restarted more than 5 times across all containers, mark this pod unhealthy
+    if total_restart_count > 5:
+        unhealthy = True
+
+    return unhealthy
      
 if __name__ == "__main__":
     main()
