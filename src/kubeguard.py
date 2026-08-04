@@ -16,6 +16,9 @@ def main() -> None:
     # parse the json into dictionary
     pods_data = load_pods(pod_json_path)
 
+    # validate that the pod has the correct fields
+    validate_pods_data(pods_data)
+
     # obtain dictionary of pods and their statuses
     unhealthy_pods = find_unhealthy_pods(pods_data)
 
@@ -35,6 +38,93 @@ def load_pods(path: str) -> dict[str, Any]:
         sys.exit(1)
 
     return pods_data
+
+def validate_pods_data(pods_data: dict[str, Any]) -> None:
+
+    # first verify that the top level is a dictionary
+    if not isinstance(pods_data, dict):
+        print("ERROR: The given pods_data is not a dictionary", file=sys.stderr)
+        sys.exit(1)
+
+    # first we check if items is at the top level
+    if "items" not in pods_data:
+        print("ERROR: No items field in JSON", file=sys.stderr)
+        sys.exit(1)
+
+    # next we check to see if the items field is a list
+    if not isinstance(pods_data["items"], list):
+        print("ERROR: Items field is not a list", file=sys.stderr)
+        sys.exit(1)
+
+    # check if list is empty
+    if not pods_data["items"]:
+        return
+
+    for pod_index, pod in enumerate((pods_data["items"])):
+
+        # verify that the pod is a dictionary
+        if not isinstance(pod, dict):
+            print(f"ERROR: Pod at index {pod_index} is not a dictionary", file=sys.stderr)
+            sys.exit(1)
+
+        # check for metadata field in items field
+        if "metadata" not in pod:
+            print(f"ERROR: Pod at index {pod_index} is missing metadata field", file=sys.stderr)
+            sys.exit(1)
+
+        if not isinstance(pod["metadata"], dict):
+            print(f"ERROR: Pod at index {pod_index} has metadata field that is not a dictionary", file=sys.stderr)
+            sys.exit(1)
+
+        # check if name field exists in metadata field
+        if "name" not in pod["metadata"]:
+            print(f"ERROR: Pod at index {pod_index} is missing metadata.name field", file=sys.stderr)
+            sys.exit(1)
+
+        pod_name = pod["metadata"]["name"]
+
+        # check if status field exists in items field
+        if "status" not in pod:
+            print(f"ERROR: Pod {pod_name} is missing status field", file=sys.stderr)
+            sys.exit(1)
+
+        # validate that status field is a dictionary
+        if not isinstance(pod["status"], dict):
+            print(f"ERROR: Pod {pod_name} has status field which is not a dictionary", file=sys.stderr)
+            sys.exit(1)
+
+        # check if containerStatuses field exists in status field
+        if "containerStatuses" not in pod["status"]:
+            print(f"ERROR: Pod {pod_name} is missing status.containerStatuses field", file=sys.stderr)
+            sys.exit(1)
+
+        # check if containerStatuses is a list
+        if not isinstance(pod["status"]["containerStatuses"], list):
+            print(f"ERROR: Pod {pod_name} has ContainerStatuses field which is not a list", file=sys.stderr)
+            sys.exit(1)
+
+        # loop through container statuses to validate
+        for container_index, container_status in enumerate(pod["status"]["containerStatuses"]):
+
+            # verify if each entry in containerstatuses is a dictionary
+            if not isinstance(container_status, dict):
+                print(f"ERROR: Container at index {container_index} in Pod {pod_name} has invalid containerStatuses field", file=sys.stderr)
+                sys.exit(1)
+
+            # check if name is in containerStatuses
+            if "name" not in container_status:
+                print(f"ERROR: Container at index {container_index} in Pod {pod_name} is missing containerStatuses.name field", file=sys.stderr)
+                sys.exit(1)
+
+            # check if ready is in containerStatuses
+            if "ready" not in container_status:
+                print(f"ERROR: Container at index {container_index} in Pod {pod_name} is missing containerStatuses.ready field", file=sys.stderr)
+                sys.exit(1)
+
+            # check if restartCount is in containerStatuses
+            if "restartCount" not in container_status:
+                print(f"ERROR: Container at index {container_index} in Pod {pod_name} is missing containerStatuses.restartCount field", file=sys.stderr)
+                sys.exit(1)
 
 def find_unhealthy_pods(pods_data: dict[str, Any]) -> dict[str, list[str]]:
 
