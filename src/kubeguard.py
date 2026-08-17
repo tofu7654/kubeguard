@@ -60,7 +60,7 @@ def validate_pods_data(pods_data: dict[str, Any]) -> None:
     if not pods_data["items"]:
         return
 
-    for pod_index, pod in enumerate((pods_data["items"])):
+    for pod_index, pod in enumerate(pods_data["items"]):
 
         # verify that the pod is a dictionary
         if not isinstance(pod, dict):
@@ -108,23 +108,52 @@ def validate_pods_data(pods_data: dict[str, Any]) -> None:
 
             # verify if each entry in containerstatuses is a dictionary
             if not isinstance(container_status, dict):
-                print(f"ERROR: Container at index {container_index} in Pod {pod_name} has invalid containerStatuses field", file=sys.stderr)
+                print(f"ERROR: Container at index {container_index} in pod {pod_name} is not a dictionary", file=sys.stderr)
                 sys.exit(1)
 
             # check if name is in containerStatuses
             if "name" not in container_status:
-                print(f"ERROR: Container at index {container_index} in Pod {pod_name} is missing containerStatuses.name field", file=sys.stderr)
+                print(f"ERROR: Container at index {container_index} in pod {pod_name} is missing containerStatuses.name field", file=sys.stderr)
                 sys.exit(1)
 
             # check if ready is in containerStatuses
             if "ready" not in container_status:
-                print(f"ERROR: Container at index {container_index} in Pod {pod_name} is missing containerStatuses.ready field", file=sys.stderr)
+                print(f"ERROR: Container at index {container_index} in pod {pod_name} is missing containerStatuses.ready field", file=sys.stderr)
                 sys.exit(1)
 
             # check if restartCount is in containerStatuses
             if "restartCount" not in container_status:
-                print(f"ERROR: Container at index {container_index} in Pod {pod_name} is missing containerStatuses.restartCount field", file=sys.stderr)
+                print(f"ERROR: Container at index {container_index} in pod {pod_name} is missing containerStatuses.restartCount field", file=sys.stderr)
                 sys.exit(1)
+
+            # check if state is in containerStatuses
+            if "state" not in container_status:
+                print(f"ERROR: Container at index {container_index} in pod {pod_name} is missing containerStatuses.state field", file=sys.stderr)
+                sys.exit(1)
+
+            # check if state field is a dictionary
+            if not isinstance(container_status["state"], dict):
+                print(f"ERROR: Container at index {container_index} in pod {pod_name} has status field which is not a dictionary", file=sys.stderr)
+                sys.exit(1)
+
+            # check if the types of states exist and are in correct format
+            if "waiting" in container_status["state"]:
+
+                if not isinstance(container_status["state"]["waiting"], dict):
+                    print(f"ERROR: Container at index {container_index} in pod {pod_name} has status.waiting field which is not a dictionary", file=sys.stderr)
+                    sys.exit(1)
+            # account for every state 
+            if "waiting" in container_status["state"]:
+                if not isinstance(container_status["state"]["waiting"], dict):
+                    print(f"ERROR: Container at index {container_index} in pod {pod_name} has status.waiting field which is not a dictionary", file=sys.stderr)
+                    sys.exit(1)
+                if "reason" in state["waiting"]:
+                    reason = container_status["state"]["waiting"]["reason"]
+            elif "terminated" in state:
+                if "reason" in state["waiting"]:
+                    reason = container_status["state"]["waiting"]["reason"]
+            else:
+            
 
 def find_unhealthy_pods(pods_data: dict[str, Any]) -> dict[str, list[str]]:
 
@@ -170,8 +199,12 @@ def find_pod_issues(pod: dict[str, Any]) -> list[str]:
 
         # check if the container is ready
         if not container_status["ready"]:
-            # record the readiness issue
-            issues.append(f"Container {container_name} is not ready")
+
+            state = container_status["state"]
+            reason = container_status["state"]["waiting"]["reason"]
+
+            # record the readiness issue with the state
+            issues.append(f"Container {container_name} is not ready: {reason}")
 
         # track the total restarts across all containers in this pod
         total_restart_count += container_status["restartCount"]
