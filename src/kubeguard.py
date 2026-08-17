@@ -133,28 +133,36 @@ def validate_pods_data(pods_data: dict[str, Any]) -> None:
 
             # check if state field is a dictionary
             if not isinstance(container_status["state"], dict):
-                print(f"ERROR: Container at index {container_index} in pod {pod_name} has status field which is not a dictionary", file=sys.stderr)
+                print(f"ERROR: Container at index {container_index} in pod {pod_name} has state field which is not a dictionary", file=sys.stderr)
                 sys.exit(1)
 
-            # check if the types of states exist and are in correct format
-            if "waiting" in container_status["state"]:
-
-                if not isinstance(container_status["state"]["waiting"], dict):
-                    print(f"ERROR: Container at index {container_index} in pod {pod_name} has status.waiting field which is not a dictionary", file=sys.stderr)
-                    sys.exit(1)
             # account for every state 
             if "waiting" in container_status["state"]:
                 if not isinstance(container_status["state"]["waiting"], dict):
-                    print(f"ERROR: Container at index {container_index} in pod {pod_name} has status.waiting field which is not a dictionary", file=sys.stderr)
+                    print(f"ERROR: Container at index {container_index} in pod {pod_name} has state.waiting field which is not a dictionary", file=sys.stderr)
                     sys.exit(1)
-                if "reason" in state["waiting"]:
-                    reason = container_status["state"]["waiting"]["reason"]
-            elif "terminated" in state:
-                if "reason" in state["waiting"]:
-                    reason = container_status["state"]["waiting"]["reason"]
+                if "reason" not in container_status["state"]["waiting"]:
+                    print(f"ERROR: Container at index {container_index} in pod {pod_name} does not have a state.waiting.reason field", file=sys.stderr)
+                    sys.exit(1)
+            # check for terminated state
+            elif "terminated" in container_status["state"]:
+                if not isinstance(container_status["state"]["terminated"], dict):
+                    print(f"ERROR: Container at index {container_index} in pod {pod_name} has state.terminated field which is not a dictionary", file=sys.stderr)
+                    sys.exit(1)
+                if "reason" not in container_status["state"]["terminated"]:
+                    print(f"ERROR: Container at index {container_index} in pod {pod_name} does not have a state.terminated.reason field", file=sys.stderr)
+                    sys.exit(1)
+            elif "running" in container_status["state"]:
+                if not isinstance(container_status["state"]["running"], dict):
+                    print(f"ERROR: Container at index {container_index} in pod {pod_name} has state.running field which is not a dictionary", file=sys.stderr)
+                    sys.exit(1)
+                # note there is not reason field for a ready container
             else:
-            
+                print(f"ERROR: Container at index {container_index} in pod {pod_name} has an invalid state field", file=sys.stderr)
+                sys.exit(1)
 
+            
+# this function takes a dictionary of pods_data and creates a dictionary with pods as keys and their issues as values
 def find_unhealthy_pods(pods_data: dict[str, Any]) -> dict[str, list[str]]:
 
     # hold the statuses of the unhealthy pods
@@ -167,7 +175,7 @@ def find_unhealthy_pods(pods_data: dict[str, Any]) -> dict[str, list[str]]:
         # analyze the pod and store the condition messages in a list
         issues = find_pod_issues(pod)
 
-        # put this issue in the overall unhealthy_pods
+        # put this issue in the overall unhealthy_pods dictionary
         if issues:
             unhealthy_pods[pod_name] = issues
 
@@ -201,10 +209,19 @@ def find_pod_issues(pod: dict[str, Any]) -> list[str]:
         if not container_status["ready"]:
 
             state = container_status["state"]
-            reason = container_status["state"]["waiting"]["reason"]
 
-            # record the readiness issue with the state
-            issues.append(f"Container {container_name} is not ready: {reason}")
+            # capture the reason if container is in a malfunctioning state
+            if "waiting" in state:
+                reason = state["waiting"]["reason"]
+                # record the readiness issue with the state
+                issues.append(f"Container {container_name} is not ready: waiting, {reason}")
+            elif "terminated" in state:
+                reason = state["terminated"]["reason"]
+                # record the readiness issue with the state
+                issues.append(f"Container {container_name} is not ready: terminated, {reason}")
+            else:
+                # record that container is running
+                issues.append(f"Container {container_name} is running but not ready")
 
         # track the total restarts across all containers in this pod
         total_restart_count += container_status["restartCount"]

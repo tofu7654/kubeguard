@@ -1,0 +1,31 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "keycloak-pod"
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "keycloak",
+            "ready": false,
+            "restartCount": 4,
+            "state": {
+              "waiting": {
+                "reason": "CrashLoopBackOff"
+              }
+            }
+          },
+          {
+            "name": "sidecar",
+            "ready": true,
+            "restartCount": 1,
+            "state": {
+              "running": {}
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

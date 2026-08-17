@@ -1,0 +1,23 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "api-pod"
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "api",
+            "ready": false,
+            "restartCount": 7,
+            "state": {
+              "waiting": {
+                "reason": "CrashLoopBackOff"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

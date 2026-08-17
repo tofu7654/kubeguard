@@ -1,0 +1,23 @@
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "worker-pod"
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "worker",
+            "ready": false,
+            "restartCount": 2,
+            "state": {
+              "terminated": {
+                "reason": "OOMKilled"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
