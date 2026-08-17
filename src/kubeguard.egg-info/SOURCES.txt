@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+src/kubeguard/__init__.py
+src/kubeguard/analyzer.py
+src/kubeguard/cli.py
+src/kubeguard/input.py
+src/kubeguard.egg-info/PKG-INFO
+src/kubeguard.egg-info/SOURCES.txt
+src/kubeguard.egg-info/dependency_links.txt
+src/kubeguard.egg-info/top_level.txt
+tests/test_kubeguard.py

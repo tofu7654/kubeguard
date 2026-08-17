@@ -1,7 +1,7 @@
 from typing import Any
 import sys
-import input
-import analyzer
+import kubeguard.input as input
+import kubeguard.analyzer as analyzer
 
 def main() -> None:
     # get path of json file from command line arg
