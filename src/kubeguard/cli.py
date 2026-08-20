@@ -13,6 +13,9 @@ def main() -> None:
     # tell parser to expect path positional argument
     parser.add_argument('path')
 
+    # add optional argument for restart threshold
+    parser.add_argument('--restart-threshold')
+
     # store the namespace object to access command line args
     namespace = parser.parse_args()
 

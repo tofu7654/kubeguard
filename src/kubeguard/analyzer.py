@@ -3,7 +3,7 @@ from typing import Any
 RESTART_THRESHOLD = 5
 
 # this function takes a dictionary of pods_data and creates a dictionary with pods as keys and their issues as values
-def find_unhealthy_pods(pods_data: dict[str, Any]) -> dict[str, list[str]]:
+def find_unhealthy_pods(pods_data: dict[str, Any], restart_threshold) -> dict[str, list[str]]:
 
     # hold the statuses of the unhealthy pods
     unhealthy_pods = {}
@@ -13,7 +13,7 @@ def find_unhealthy_pods(pods_data: dict[str, Any]) -> dict[str, list[str]]:
         pod_name = pod["metadata"]["name"] # get the name of the pod
 
         # analyze the pod and store the condition messages in a list
-        issues = find_pod_issues(pod)
+        issues = find_pod_issues(pod, restart_threshold)
 
         # put this issue in the overall unhealthy_pods dictionary
         if issues:
@@ -23,7 +23,7 @@ def find_unhealthy_pods(pods_data: dict[str, Any]) -> dict[str, list[str]]:
     return unhealthy_pods
 
 # this function determines the issues a pod may have and returns a list, empty if healthy
-def find_pod_issues(pod: dict[str, Any]) -> list[str]:
+def find_pod_issues(pod: dict[str, Any], restart_threshold) -> list[str]:
     issues = []
 
     total_restart_count = 0
@@ -52,7 +52,7 @@ def find_pod_issues(pod: dict[str, Any]) -> list[str]:
         total_restart_count += container_status["restartCount"]
 
     # check if the containers have restarted more than 5 times across all containers
-    if total_restart_count > RESTART_THRESHOLD:
+    if total_restart_count > restart_threshold:
         # record the excessive restart count
         issues.append(f"Total restart count: {total_restart_count}")
 
